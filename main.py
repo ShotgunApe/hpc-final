@@ -7,12 +7,6 @@ import numpy as np
 
 #tf.add(1, 2).numpy()
 #
-#def g_j_tf(A):
-#    tf_A = tf.constant(A)
-#    
-#
-#def g_j_torch(A):
-#    torch_A = torch.tensor(A)
 #
 #
 #x_data = torch.tensor(data)
@@ -48,6 +42,44 @@ def gj(A,b):
     
     return b, A
 
+def g_j_torch(A, b):
+    A = torch.tensor(A)
+    b = torch.tensor(b)
+    for k in range(n):
+        if torch.abs(A[k,k]) < 1.0e-12: 
+            for i in range(k+1, n): 
+                if torch.abs(A[i,k]) > torch.abs(A[k,k]): 
+                    temp = A[k].clone()
+                    A[k] = A[i]
+                    A[i] = temp
+                    temp = b[k].clone()
+                    b[k] = b[i]
+                    b[i] = temp
+                    break
+
+def row_to_top_torch(A, b, k, n):
+    if torch.abs(A[k,k]) < 1.0e-12: 
+        for i in range(k+1, n): 
+            if torch.abs(A[i,k]) > torch.abs(A[k,k]): 
+                temp = A[k].clone()
+                A[k] = A[i]
+                A[i] = temp
+                temp = b[k].clone()
+                b[k] = b[i]
+                b[i] = temp
+                break
+
+A = torch.tensor([
+    [0,2,0,1], 
+    [2,2,3,2], 
+    [4,-3,0,1], 
+    [6,1,-6,-5]
+    ])
+b = torch.tensor([0,-2,-7,6])
+
+print(A, b)
+row_to_top_torch(A, b, 0, 4)
+print(A, b)
 
 A = np.array([
     [0,2,0,1], 
