@@ -58,10 +58,13 @@
 \newpage
 
 \section{Introduction}
-Our initial area of inquiry involved implementing an experiment utilizing Tensor Comprehensions, a domain-specific language and compiler framework developed by Facebook AI Research for streamlining the creation of high-performance machine learning (ML) kernels, particularly for GPUs. Tensor Comprehensions provided several notable features, including a mathematical syntax inspired by Einstein notation, polyhedral just-in-time (JIT) compilation autotuning, compilation caching, and framework-agnostic integration. However, after beginning our implementation phase, we discovered that Tensor Comprehensions is no longer supported and is no longer available in the Conda repositories. As a result, we were unable to install the necessary tools and subsequently had to pivot our research direction. Hence, our area of focus switched to implementing tensor operations on matrices, such as the Gauss-Jordan reduction method, in both PyTorch and TensorFlow. Using profiling software, we will analyze the compute time for both implementations. 
+Our initial area of inquiry involved implementing an experiment utilizing Tensor Comprehensions, a domain-specific language and compiler framework developed by Facebook AI Research for streamlining the creation of high-performance machine learning (ML) kernels, particularly for GPUs \cite{tens}. Tensor Comprehensions provided several notable features, including a mathematical syntax inspired by Einstein notation, polyhedral just-in-time (JIT) compilation autotuning, compilation caching, and framework-agnostic integration. However, after beginning our implementation phase, we discovered that Tensor Comprehensions is no longer supported and is no longer available in the Conda repositories. As a result, we were unable to install the necessary tools and subsequently had to pivot our research direction. Hence, our area of focus switched to implementing tensor operations on matrices, such as the Gauss-Jordan reduction method, in both PyTorch and TensorFlow. Using profiling software, we analyze the compute time for both implementations to determine their efficiency.
+
 \section{Related Work}
+Previously, Tensor Comprehensions optimized code through linear programming and black box auto-tuning to generate the correctly optimized code \cite{neu}. Using these approaches, this library had the benefit of providing high performant code with no manual intervention. It attempted this by creating a domain specific language to denote the number of possible optimizations that could be made to an operation using a polyhedral model. While other libraries exist from Bondhugula et al. using this same approach, it was the first to combine multiple techniques to optimize tensor operations in a manner that only required the use of high-level code \cite{neu, bondhugula2008practical}. As of 2019, however, this library has since been deprecated.
 
 \section{Methodology}
+
 
 \section{Implementation}
 
@@ -79,7 +82,7 @@ In order to implement these algorithms, the libraries \textbf{TensorFlow} and \t
 
 \newpage
 % Bibliography
-%\bibliography{bibliography}
-%\bibliographystyle{abbrv}
+\bibliography{bibliography}
+\bibliographystyle{abbrv}
 
 \end{document}
