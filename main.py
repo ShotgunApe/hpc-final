@@ -5,6 +5,9 @@ import numpy as np
 import warnings
 warnings.filterwarnings("ignore")
 
+import cProfile, io, pstats
+from pstats import SortKey
+
 #tf.debugging.set_log_device_placement(True)
 #tf.config.list_physical_devices(device_type = None)
 
@@ -107,3 +110,60 @@ b = [0,-2,-7,6]
 x,a = gj_torch(A,b)
 
 print(f"Solution: {x}")
+
+
+def profile(_type="standard", n=1, rand=False, seed=23, log_to_file=False, m=4):
+    '''
+    _type (str): implementation to profile
+        "torch" or "standard"
+    n (int): number of iterations to profile
+    rand (bool): whether or not to profile random matrices
+    seed (int): seed to use when creating random matrices
+    log_to_file (bool): whether or not to log to file
+        save string: {_type}{n}{rand}{seed}.profile
+    m (int): size of matrix and vector
+        only used when rand=True
+    '''
+    if _type == "torch":
+        func = gj_torch
+    else:
+        func = gj
+    # Q: does python do truthy evaluation?!
+    if rand == True:
+        np.random.seed(seed=seed)
+        A = np.random.rand(m, m)*12 - 6 # interval (-6, 6) as L.'s demo
+        b = np.random.rand(m, 1)*12 - 6
+        A = A.tolist()
+        b = b.tolist()
+    else:
+        A = [
+            [0,2,0,1], 
+            [2,2,3,2], 
+            [4,-3,0,1], 
+            [6,1,-6,-5]
+            ]
+        b = [0,-2,-7,6]
+    pr = cProfile.Profile()
+    pr.enable()
+    for i in range(n):
+        x, a = func(A, b)
+    pr.disable()
+    if log_to_file == True:
+        s = io.StringIO()
+        sortby = SortKey.CUMULATIVE
+        ps = pstats.Stats(pr, stream=s).strip_dirs().sort_stats(sortby)
+        ps.print_stats()
+        ps.print_callees()
+        with open(f"{_type}{n}{rand}{seed}.profile", "w") as f:
+            print(s.getvalue(), file=f)
+
+    # TODO: return the cumulative runtime
+
+def compare():
+    n = 100
+    profile(_type="standard", n=n, rand=True, seed=23, log_to_file=True, m=4)
+    profile(_type="torch", n=n, rand=True, seed=23, log_to_file=True, m=4)
+
+    # Q: for what value of m is standard faster than torch (if any?)
+
+    
