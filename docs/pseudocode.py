@@ -2,22 +2,6 @@ import tensorflow as tf
 import torch as torch
 import numpy as np
 
-#tf.debugging.set_log_device_placement(True)
-#tf.config.list_physical_devices(device_type = None)
-
-#tf.add(1, 2).numpy()
-#
-#def g_j_tf(A):
-#    tf_A = tf.constant(A)
-#    
-#
-#def g_j_torch(A):
-#    torch_A = torch.tensor(A)
-#
-#
-#x_data = torch.tensor(data)
-#
-#print(x_data)
 
 def gj(A,b): 
     A = np.array(A, float)
@@ -47,16 +31,3 @@ def gj(A,b):
             b[i] -= factor*b[k]
     
     return b, A
-
-
-A = np.array([
-    [0,2,0,1], 
-    [2,2,3,2], 
-    [4,-3,0,1], 
-    [6,1,-6,-5]
-    ])
-b = np.array([0,-2,-7,6])
-
-x,a = gj(A,b)
-
-print(f"Solution: {x}")

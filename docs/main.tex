@@ -17,6 +17,7 @@
 \usepackage{setspace}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{lipsum}
 
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
@@ -53,6 +54,9 @@
 \tableofcontents
 \newpage
 
+\lstlistoflistings
+\newpage
+
 \section{Introduction}
 
 \section{Related Work}
@@ -61,8 +65,11 @@
 
 \section{Implementation}
 
+In order to implement these algorithms, the libraries \textbf{TensorFlow} and \textbf{PyTorch} were used.
+\hfill\break
+
 \lstset{style=mystyle}
-\lstinputlisting[language=Python,frame=single]{pseudocode.py}
+\lstinputlisting[language=Python,frame=single, caption=Pseudocode for \lstinline{gj(A, B)}]{pseudocode.py}
 
 \section{Data Collection}
 
