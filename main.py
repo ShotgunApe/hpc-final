@@ -1,6 +1,6 @@
-import tensorflow as tf
 import torch as torch
 import numpy as np
+import cupy as cp
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -32,13 +32,11 @@ def gj(A,b):
                         A[k,j],A[i,j] = A[i,j],A[k,j]
                     b[k],b[i] = b[i],b[k]
                     break
-        print(f"b after swap {k}: {b}")
         # Division
         pivot = A[k,k]
         for j in range(k,n): 
             A[k,j] /= pivot
         b[k] /= pivot
-        print(f"b after division {k}: {b}")
         #Elimination
         for i in range(n): 
             if i == k or A[i,k] == 0: 
@@ -47,10 +45,56 @@ def gj(A,b):
             for j in range(k,n): 
                 A[i,j] -= factor*A[k,j]
             b[i] -= factor*b[k]
-
-        print(f"b after elimination {k}: {b}")
     
     return b, A
+
+def gj_vectorized(A, b):
+    A = np.array(A, float)
+    b = np.array(b, float)
+    n = len(A)
+
+    b = np.reshape(b, (n, 1))
+    Ab = np.concatenate((A, b), axis = 1)
+
+    for k in range(n):
+        row_to_top_np(Ab, k, n)
+
+        # Division
+        pivot = np.array(Ab[k, k])
+        Ab[k] = np.divide(Ab[k], pivot)
+
+        # Elimination
+        for i in range(n):
+            if i == k or Ab[i,k] == 0:
+                continue
+            factor = np.array(Ab[i,k])
+            Ab[i, k:] = np.subtract(Ab[i, k:], np.multiply(Ab[k, k:], factor))
+
+    return Ab[:, n:], Ab[:, :n]
+
+def gj_cupy(A, b):
+    A = cp.array(A, float)
+    b = cp.array(b, float)
+    n = len(A)
+
+    b = cp.reshape(b, (n, 1))
+    Ab = cp.concatenate((A, b), axis = 1)
+
+    for k in range(n):
+        row_to_top_cp(Ab, k, n)
+
+        # Division
+        pivot = cp.array(Ab[k, k])
+        Ab[k] = cp.divide(Ab[k], pivot)
+
+        # Elimination
+        for i in range(n):
+            if i == k or Ab[i,k] == 0:
+                continue
+            factor = cp.array(Ab[i,k])
+            Ab[i, k:] = cp.subtract(Ab[i, k:], cp.multiply(Ab[k, k:], factor))
+
+    return Ab[:, n:], Ab[:, :n]
 
 def gj_torch(A, b):
     A = torch.tensor(A, dtype=torch.float)
@@ -76,7 +120,23 @@ def gj_torch(A, b):
 
     return Ab[:, n:], Ab[:, :n]
 
+def row_to_top_np(Ab, k, n):
+    if np.fabs(Ab[k,k]) < 1.0e-12: 
+        for i in range(k+1, n): 
+            if np.fabs(Ab[i,k]) > np.fabs(Ab[k,k]): 
+                temp = np.array(Ab[k])
+                Ab[k] = Ab[i]
+                Ab[i] = temp
+                break
 
+def row_to_top_cp(Ab, k, n):
+    if cp.fabs(Ab[k,k]) < 1.0e-12: 
+        for i in range(k+1, n): 
+            if cp.fabs(Ab[i,k]) > cp.fabs(Ab[k,k]): 
+                temp = cp.array(Ab[k])
+                Ab[k] = Ab[i]
+                Ab[i] = temp
+                break
 
 def row_to_top_torch(Ab, k, n):
     if torch.abs(Ab[k,k]) < 1.0e-12: 
@@ -107,6 +167,30 @@ A = [
     ]
 b = [0,-2,-7,6]
 
+x,a = gj_cupy(A,b)
+
+print(f"Solution: {x}")
+
+A = [
+    [0,2,0,1], 
+    [2,2,3,2], 
+    [4,-3,0,1], 
+    [6,1,-6,-5]
+    ]
+b = [0,-2,-7,6]
+
+x,a = gj_vectorized(A,b)
+
+print(f"Solution: {x}")
+
+A = [
+    [0,2,0,1], 
+    [2,2,3,2], 
+    [4,-3,0,1], 
+    [6,1,-6,-5]
+    ]
+b = [0,-2,-7,6]
+
 x,a = gj_torch(A,b)
 
 print(f"Solution: {x}")
@@ -126,6 +210,10 @@ def profile(_type="standard", n=1, rand=False, seed=23, log_to_file=False, m=4):
     '''
     if _type == "torch":
         func = gj_torch
+    elif _type == "npvectorized":
+        func = gj_vectorized
+    elif _type == "cpvectorized":
+        func = gj_cupy
     else:
         func = gj
     # Q: does python do truthy evaluation?!
@@ -154,16 +242,33 @@ def profile(_type="standard", n=1, rand=False, seed=23, log_to_file=False, m=4):
         ps = pstats.Stats(pr, stream=s).strip_dirs().sort_stats(sortby)
         ps.print_stats()
         ps.print_callees()
-        with open(f"{_type}{n}{rand}{seed}.profile", "w") as f:
+        with open(f"{_type}_{n}_{m}{rand}{seed}.profile", "w") as f:
             print(s.getvalue(), file=f)
 
     # TODO: return the cumulative runtime
 
 def compare():
     n = 100
-    profile(_type="standard", n=n, rand=True, seed=23, log_to_file=True, m=4)
-    profile(_type="torch", n=n, rand=True, seed=23, log_to_file=True, m=4)
 
-    # Q: for what value of m is standard faster than torch (if any?)
+    # profile(_type="torch", n=n, rand=True, seed=23, log_to_file=True, m=64)
+    # profile(_type="cpvectorized", n=n, rand=True, seed=23, log_to_file=True, m=64)
+    # profile(_type="npvectorized", n=n, rand=True, seed=23, log_to_file=True, m=64)
+    # profile(_type="standard", n=n, rand=True, seed=23, log_to_file=True, m=64)
+    
+    # # profile(_type="torch", n=n, rand=True, seed=23, log_to_file=True, m=128)
+    # profile(_type="cpvectorized", n=n, rand=True, seed=23, log_to_file=True, m=128)
+    # profile(_type="npvectorized", n=n, rand=True, seed=23, log_to_file=True, m=128)
+    # profile(_type="standard", n=n, rand=True, seed=23, log_to_file=True, m=128)
+    
+    # profile(_type="torch", n=n, rand=True, seed=23, log_to_file=True, m=256)
+    # profile(_type="cpvectorized", n=n, rand=True, seed=23, log_to_file=True, m=256)
+    profile(_type="npvectorized", n=n, rand=True, seed=23, log_to_file=True, m=256)
+    profile(_type="standard", n=n, rand=True, seed=23, log_to_file=True, m=256)
+
+    
+    profile(_type="torch", n=n, rand=True, seed=23, log_to_file=True, m=1024)
+    profile(_type="npvectorized", n=n, rand=True, seed=23, log_to_file=True, m=1024)
+
+compare()
 
     
