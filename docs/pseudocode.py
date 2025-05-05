@@ -1,33 +1,23 @@
-import tensorflow as tf
-import torch as torch
-import numpy as np
+def gj_torch(A, b):
+    A = torch.tensor(A, dtype=torch.float)
+    b = torch.tensor(b, dtype=torch.float)
+    n = len(A)
 
+    b = torch.reshape(b, (n, 1))
+    Ab = torch.cat((A, b), dim = 1)
 
-def gj(A,b): 
-    A = np.array(A, float)
-    b = np.array(b, float)
-    n = len(b)
-    
-    for k in range(n): 
-        if np.fabs(A[k,k]) < 1.0e-12: 
-            for i in range(k+1, n): 
-                if np.fabs(A[i,k]) > np.fabs(A[k,k]): 
-                    for j in range(k,n): 
-                        A[k,j],A[i,j] = A[i,j],A[k,j]
-                    b[k],b[i] = b[i],b[k]
-                    break
+    for k in range(n):
+        row_to_top_torch(Ab, k, n)
+
         # Division
-        pivot = A[k,k]
-        for j in range(k,n): 
-            A[k,j] /= pivot
-        b[k] /= pivot
-        #Elimination
-        for i in range(n): 
-            if i == k or A[i,k] == 0: 
+        pivot = Ab[k, k].clone()
+        Ab[k] = torch.div(Ab[k], pivot)
+
+        # Elimination
+        for i in range(n):
+            if i == k or Ab[i,k] == 0:
                 continue
-            factor = A[i,k]
-            for j in range(k,n): 
-                A[i,j] -= factor*A[k,j]
-            b[i] -= factor*b[k]
-    
-    return b, A
+            factor = Ab[i,k].clone()
+            Ab[i, k:] = torch.sub(Ab[i, k:], torch.mul(Ab[k, k:], factor))
+
+    return Ab[:, n:], Ab[:, :n]

@@ -1,6 +1,6 @@
 \documentclass[12pt]{article}
 
-\title{HPC Final}
+\title{Exploring Tensor Optimizations}
 \date{May 4th, 2025}
 
 % author hijacking is so real https://tex.stackexchange.com/questions/63384/add-additional-text-on-title-page
@@ -61,23 +61,28 @@
 Our initial area of inquiry involved implementing an experiment utilizing Tensor Comprehensions, a domain-specific language and compiler framework developed by Facebook AI Research for streamlining the creation of high-performance machine learning (ML) kernels, particularly for GPUs \cite{tens}. Tensor Comprehensions provided several notable features, including a mathematical syntax inspired by Einstein notation, polyhedral just-in-time (JIT) compilation autotuning, compilation caching, and framework-agnostic integration. However, after beginning our implementation phase, we discovered that Tensor Comprehensions is no longer supported and is no longer available in the Conda repositories. As a result, we were unable to install the necessary tools and subsequently had to pivot our research direction. Hence, our area of focus switched to implementing tensor operations on matrices, such as the Gauss-Jordan reduction method, in both PyTorch and TensorFlow. Using profiling software, we analyze the compute time for both implementations to determine their efficiency.
 
 \section{Related Work}
-Previously, Tensor Comprehensions optimized code through linear programming and black box auto-tuning to generate the correctly optimized code \cite{neu}. Using these approaches, this library had the benefit of providing high performant code with no manual intervention. It attempted this by creating a domain specific language to denote the number of possible optimizations that could be made to an operation using a polyhedral model. While other libraries exist from Bondhugula et al. using this same approach, it was the first to combine multiple techniques to optimize tensor operations in a manner that only required the use of high-level code \cite{neu, bondhugula2008practical}. As of 2019, however, this library has since been deprecated.
+Previously, Tensor Comprehensions optimized code through linear programming and black box auto-tuning to generate the correctly optimized code \cite{neu}. Using these approaches, this library had the benefit of providing high performant code with no manual intervention. It attempted this by creating a domain specific language to denote the number of possible optimizations that could be made to an operation using a polyhedral model. While other libraries exist from Bondhugula et al. using this same approach, it was the first to combine multiple techniques to optimize tensor operations in a manner that only required the use of high-level code \cite{neu, bondhugula2008practical}. As of 2019, however, this library has since been deprecated. Shifting gears, then, we opted to simulate what one would experience optimizing tensor operations themselves using several libraries.
 
 \section{Methodology}
 
-We implemented the Gauss-Jordan algorithm as a tensor operation to evaluate and compare the compute times of a naive approach using \textbf{NumPy} and a vectorized approach using \textbf{PyTorch}. At its core, the algorithm iterates over each pivot column, checking if the pivot element is zero. If so, the pivot row is swapped with another row containing a non-zero element in that column. Next, to satisfy the requirement that each pivot must be 1, the entire pivot row is divided by the value in the pivot position. Following this, the algorithm eliminates all other entries in the pivot column by subtracting suitable multiples of the pivot row from the other rows, both above and below the pivot. If the matrix is square and invertible, this process results in an identity matrix; otherwise, the resulting matrix will contain free variables corresponding to the non-pivot columns.
+To accomplish this, we implemented the Gauss-Jordan algorithm as a tensor operation to evaluate and compare the compute times of a naive approach using \textbf{NumPy} and a vectorized approach using \textbf{PyTorch}. At its core, the algorithm iterates over each pivot column, checking if the pivot element is zero. If so, the pivot row is swapped with another row containing a non-zero element in that column. Next, to satisfy the requirement that each pivot must be 1, the entire pivot row is divided by the value in the pivot position. Following this, the algorithm eliminates all other entries in the pivot column by subtracting suitable multiples of the pivot row from the other rows, both above and below the pivot. If the matrix is square and invertible, this process results in an identity matrix; otherwise, the resulting matrix will contain free variables corresponding to the non-pivot columns.
 
 The naive implementation uses nested for loops to iterate over each element of the matrix and vector. The vectorized approach improves on this by treating the matrix and vector as a single tensor, then iterating over the rows of the tensor. Within the loop, we make calls to vectorized functions provided by \textbf{PyTorch} to operate on the row as a whole.
 
 \section{Implementation}
 
-In order to implement these algorithms, the libraries \textbf{TensorFlow} and \textbf{PyTorch} were used.
+In order to implement these algorithms, the \textbf{PyTorch}, \textbf{NumPy}, and \textbf{CuPy} libraries were used to represent the different levels of optimization. \textbf{Listing 1} provides the implementation using \textbf{PyTorch}:
 \hfill\break
 
 \lstset{style=mystyle}
-\lstinputlisting[language=Python,frame=single, caption=Pseudocode for \lstinline{gj(A, B)}]{pseudocode.py}
+\lstinputlisting[language=Python,frame=single, caption=Code for \lstinline{gj_torch(A, b)}]{pseudocode.py}
+
 
 \section{Data Collection}
+To measure the performance of each algorithm, the \textbf{cProfile} library was used. A wrapper function was written to profile each function with some number \textit{n} iterations. This was then logged to a separate file where execution time was measured and subsequently graphed. This was done manually by copying the execution time from \textbf{*.profile}. \textbf{Listing 2} provides the wrapper function used to profile each library, respectively.
+\hfill\break
+
+\lstinputlisting[language=Python,frame=single, caption=Code for \lstinline{compare()}]{pseudocode2.py}
 
 \section{Results}
 
