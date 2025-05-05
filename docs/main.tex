@@ -88,8 +88,15 @@ To measure the performance of each algorithm, the \textbf{cProfile} library was 
 \lstinputlisting[language=Python,frame=single, caption=Code for \lstinline{compare()}]{pseudocode2.py}
 
 \section{Results}
+We tested matrices ranging form 2X2, 4X4, 8X8, 32X32, 64X64, and 128X128. The Results indicate that there is an increase in computation time for each increment in size. 
 
 \section{Conclusion and Future Work}
+he results of our experiment indicated that for smaller matrices, optimizations such as vectorized operations, CuPy, and PyTorch implementations of the Gauss-Jordan method are unnecessary. The unoptimized, baseline version consistently outperformed each of the optimized versions for the 2×2 and 4×4 matrices (and 8X8? need check). We hypothesize that the overhead introduced by these optimizations,particularly when involving GPU computation, contributes to the overall increase in compute time for smaller matricies.
+
+As matrix size increased, however, the optimized implementations began to surpass the unoptimized version in performance, with the notable exception of the CuPy implementation. Despite its intended use for GPU acceleration, the CuPy-based implementation exhibited the highest compute times across all matrix sizes tested. We suspect this may be due to factors such as the overhead of data transfer between the CPU and GPU, or inefficiencies in CuPy’s handling of Gauss-Jordan operations relative to frameworks like PyTorch and NumPy.  
+
+
+For future work, it would be valuable to extend this experiment by testing even larger matrices to better understand the scalability of each implementation. Additionally, exploring more advanced GPU profiling tools could help determine the sources of overhead in frameworks like CuPy. Investigating alternative GPU-accelerated libraries or custom CUDA kernel implementations for Gauss-Jordan reduction could also provide insight into performance trade-offs at scale.
 
 \newpage
 % Bibliography
