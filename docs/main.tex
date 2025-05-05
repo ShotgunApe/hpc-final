@@ -63,11 +63,11 @@ Our initial area of inquiry involved implementing an experiment utilizing Tensor
 \section{Related Work}
 Previously, Tensor Comprehensions optimized code through linear programming and black box auto-tuning to generate the correctly optimized code \cite{neu}. Using these approaches, this library had the benefit of providing high performant code with no manual intervention. It attempted this by creating a domain specific language to denote the number of possible optimizations that could be made to an operation using a polyhedral model. While other libraries exist from Bondhugula et al. using this same approach, it was the first to combine multiple techniques to optimize tensor operations in a manner that only required the use of high-level code \cite{neu, bondhugula2008practical}. As of 2019, however, this library has since been deprecated. Shifting gears, then, we opted to simulate what one would experience optimizing tensor operations themselves using several libraries.
 
+To support our implementation of the Gauss-Jordan algorithm, we consulted a YouTube video as a practical reference for its procedural steps. While academic descriptions of the algorithm are widely available, this video provided a clear, step-by-step demonstration of the row operations involved, including pivot selection, row swapping, and row elimination \cite{gaussjordan_video}.
+
 \section{Methodology}
 
 To accomplish this, we implemented the Gauss-Jordan algorithm as a tensor operation to evaluate and compare the compute times of a naive approach using \textbf{NumPy} and a vectorized approach using \textbf{PyTorch}. At its core, the algorithm iterates over each pivot column, checking if the pivot element is zero. If so, the pivot row is swapped with another row containing a non-zero element in that column. Next, to satisfy the requirement that each pivot must be 1, the entire pivot row is divided by the value in the pivot position. Following this, the algorithm eliminates all other entries in the pivot column by subtracting suitable multiples of the pivot row from the other rows, both above and below the pivot. If the matrix is square and invertible, this process results in an identity matrix; otherwise, the resulting matrix will contain free variables corresponding to the non-pivot columns.
-
-The naive implementation uses nested for loops to iterate over each element of the matrix and vector. The vectorized approach improves on this by treating the matrix and vector as a single tensor, then iterating over the rows of the tensor. Within the loop, we make calls to vectorized functions provided by \textbf{PyTorch} to operate on the row as a whole.
 
 \section{Implementation}
 
