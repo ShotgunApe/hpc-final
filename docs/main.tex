@@ -77,6 +77,9 @@ In order to implement these algorithms, the \textbf{PyTorch}, \textbf{NumPy}, an
 \lstset{style=mystyle}
 \lstinputlisting[language=Python,frame=single, caption=Code for \lstinline{gj_torch(A, b)}]{pseudocode.py}
 
+We use the cProfile Python library for deterministic profiling of the Python interpreter. Deterministic profilers record the timing intervals of all function calls, function returns, and exception events; this is done via a hook from the Python interpreter loop. Deterministic profilers are contrasted with statistical profilers, wherein statistical profilers take samples of the runtime at known intervals to instrument the execution graph. Deterministic profilers are deterministic since they do not rely on a sampling method, and they return identical statistical results for identical execution graphs. 
+
+Deterministic profilers are usually considered unwieldy, since a large time cost is incurred when synchronizing the profiler's clock with the runtime. However, the Python interpreter loop is so bulky that the cost of deterministic profiling is not considered a hindrance in most applications. Furthermore, deterministic profiles are needed when precise counts of calls are required; this nuance is outside the scope of this paper, since we are not optimizing our kernels by minimizing function calls, but it may interesting to the reader.
 
 \section{Data Collection}
 To measure the performance of each algorithm, the \textbf{cProfile} library was used. A wrapper function was written to profile each function with some number \textit{n} iterations. This was then logged to a separate file where execution time was measured and subsequently graphed. This was done manually by copying the execution time from \textbf{*.profile}. \textbf{Listing 2} provides the wrapper function used to profile each library, respectively.
